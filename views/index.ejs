@@ -1,0 +1,2812 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>GoMerchPro — GoPay Merchant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<style>
+:root {
+  --bg: #0a0e14;
+  --glass: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.12);
+  --glass-border2: rgba(255,255,255,0.18);
+  --text: #f0f4f8;
+  --muted: #8b9aab;
+  --green: #00d68f;
+  --green2: #00b377;
+  --green-glow: rgba(0,214,143,0.25);
+  --purple: #7c6bff;
+  --blue: #6b8aff;
+  --red: #ff5c6c;
+  --orange: #ff9f43;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --shadow: 0 8px 40px rgba(0,0,0,0.4);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; min-height: 100dvh;
+  overflow-x: hidden; -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,214,143,0.12), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(107,138,255,0.08), transparent 45%);
+  pointer-events: none; z-index: 0;
+}
+body::after {
+  content: ''; position: fixed; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 80%);
+  pointer-events: none; z-index: 0;
+}
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.glass-strong {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border: 1px solid var(--glass-border2);
+}
+html.reduced .glass, html.reduced .glass-strong, html.reduced .header,
+html.reduced .console-fab, html.reduced .docs-header {
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+html.reduced .glass { background: rgba(20,26,36,0.92); }
+html.reduced .glass-strong { background: rgba(20,26,36,0.96); }
+html.reduced .docs-header { background: rgba(20,26,36,0.9); }
+
+.app {
+  position: relative; z-index: 1;
+  max-width: 480px; margin: 0 auto;
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column;
+  padding: 0 16px 24px;
+  transition: max-width 0.25s ease;
+}
+.app.docs-mode { max-width: 820px; }
+.app.docs-mode .header { display: none; }
+.app.docs-mode .console-fab { display: none !important; }
+
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 0 12px;
+  position: sticky; top: 0; z-index: 30;
+  background: rgba(10,14,20,0.7);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  margin: 0 -16px; padding-left: 16px; padding-right: 16px;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; letter-spacing: -0.02em; }
+.brand-logo {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(145deg, #0d2a1f, #0a1a14);
+  border: 1px solid rgba(0,214,143,0.35);
+  display: grid; place-items: center;
+  box-shadow: 0 0 20px var(--green-glow);
+}
+.brand-logo svg { width: 18px; height: 18px; }
+.brand span em { color: var(--green); font-style: normal; }
+
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.badge-connected {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700;
+  color: #7dffc4;
+  background: rgba(0,214,143,0.12);
+  border: 1px solid rgba(0,214,143,0.25);
+  padding: 6px 12px; border-radius: 999px;
+}
+.badge-connected .dot {
+  width: 7px; height: 7px; background: var(--green); border-radius: 50%;
+  box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+.icon-btn {
+  width: 34px; height: 34px; border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.06);
+  color: var(--muted);
+  display: grid; place-items: center;
+  cursor: pointer; transition: 0.2s;
+  padding: 0; font-family: inherit;
+}
+.icon-btn:hover { color: var(--green); border-color: rgba(0,214,143,0.4); }
+.icon-btn.spinning svg { animation: spin 0.8s linear infinite; }
+
+.screen { display: none; flex: 1; flex-direction: column; animation: fadeIn 0.35s ease; }
+.screen.active { display: flex; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+.auth-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 20px 0 40px; }
+.auth-card { padding: 32px 24px 28px; text-align: center; }
+.auth-icon {
+  width: 56px; height: 56px; margin: 0 auto 18px;
+  border-radius: 16px;
+  background: rgba(124,107,255,0.15);
+  border: 1px solid rgba(124,107,255,0.3);
+  display: grid; place-items: center; color: var(--purple);
+}
+.auth-card h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 6px; }
+.auth-card .sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; line-height: 1.5; }
+.field-label {
+  display: block; text-align: left;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 8px;
+}
+.phone-row {
+  display: flex; align-items: center;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.phone-row:focus-within {
+  border-color: rgba(0,214,143,0.5);
+  box-shadow: 0 0 0 3px rgba(0,214,143,0.1);
+}
+.phone-prefix {
+  padding: 14px 12px 14px 16px;
+  font-size: 15px; font-weight: 600; color: var(--muted);
+  border-right: 1px solid var(--glass-border);
+  white-space: nowrap;
+}
+.phone-row input {
+  flex: 1; border: 0; outline: 0;
+  background: transparent; color: var(--text);
+  font-size: 16px; font-weight: 500;
+  padding: 14px 16px; font-family: inherit;
+}
+.phone-row input::placeholder { color: #4a5568; }
+.otp-boxes { display: flex; gap: 10px; justify-content: center; margin: 8px 0 20px; }
+.otp-boxes input {
+  width: 58px; height: 58px; text-align: center;
+  font-size: 22px; font-weight: 700;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: rgba(0,0,0,0.35);
+  color: var(--text); outline: 0; font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.otp-boxes input:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(124,107,255,0.2);
+}
+.otp-hint { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; width: 100%; padding: 15px 20px;
+  border: 0; border-radius: 14px;
+  font-size: 15px; font-weight: 700; font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+}
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--green), var(--green2));
+  color: #03140e; box-shadow: 0 8px 28px var(--green-glow);
+}
+.btn-purple {
+  background: linear-gradient(135deg, #7c6bff, #5b4cdb);
+  color: #fff; box-shadow: 0 8px 28px rgba(124,107,255,0.3);
+}
+.btn-ghost { background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; margin-top: 14px; padding: 10px; }
+.btn-ghost:hover { color: var(--text); }
+.btn-sm { width: auto; padding: 10px 16px; font-size: 13px; border-radius: 10px; }
+.btn-outline { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text); }
+.btn-danger-soft { background: rgba(255,92,108,0.1); border: 1px solid rgba(255,92,108,0.25); color: #ff8a96; }
+.btn-purple-soft { background: rgba(124,107,255,0.12); border: 1px solid rgba(124,107,255,0.25); color: #b0a6ff; }
+
+.error-msg {
+  margin-top: 14px; padding: 10px 14px; border-radius: 10px;
+  background: rgba(255,92,108,0.12);
+  border: 1px solid rgba(255,92,108,0.3);
+  color: #ff8a96; font-size: 12px; font-weight: 500;
+  display: none; text-align: left;
+}
+.error-msg.show { display: block; }
+.loading-spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-top-color: #03140e; border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.token-card { padding: 18px; margin-bottom: 16px; }
+.token-block { margin-bottom: 14px; }
+.token-block:last-of-type { margin-bottom: 12px; }
+.token-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.token-box { background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px; }
+.token-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px; line-height: 1.55; color: #a8b8c8;
+  word-break: break-all;
+  max-height: 52px; overflow: hidden; transition: max-height 0.3s;
+}
+.token-text.expanded { max-height: 300px; }
+.token-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--glass-border);
+}
+.token-toggle {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  background: none; border: 0; cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; gap: 4px;
+}
+.token-toggle:hover { color: var(--text); }
+.copy-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.05);
+  color: var(--muted); cursor: pointer;
+  display: grid; place-items: center;
+  transition: 0.15s;
+}
+.copy-btn:hover { color: var(--green); border-color: rgba(0,214,143,0.4); }
+.token-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #7dffc4; margin-bottom: 14px; }
+.token-status .dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; box-shadow: 0 0 6px var(--green); }
+.token-btns { display: flex; gap: 8px; }
+.token-btns .btn { flex: 1; }
+
+.menu-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.menu-tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 6px; padding: 14px 8px; border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.04);
+  color: var(--muted); font-size: 11px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: 0.2s;
+}
+.menu-tab svg { width: 20px; height: 20px; }
+.menu-tab:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+.menu-tab.active {
+  background: linear-gradient(135deg, rgba(0,214,143,0.2), rgba(0,179,119,0.12));
+  border-color: rgba(0,214,143,0.4); color: var(--green);
+  box-shadow: 0 4px 20px var(--green-glow);
+}
+.menu-tab.active[data-tab="history"] {
+  background: linear-gradient(135deg, rgba(15,20,30,0.9), rgba(20,28,40,0.9));
+  border-color: rgba(255,255,255,0.2); color: var(--text); box-shadow: var(--shadow);
+}
+.menu-tab.active[data-tab="payouts"] {
+  background: rgba(255,255,255,0.08);
+  border-color: var(--glass-border2); color: var(--text); box-shadow: none;
+}
+
+.panel { display: none; }
+.panel.active { display: block; animation: fadeIn 0.3s ease; }
+.panel-card { padding: 18px; }
+.panel-title {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-title .count {
+  font-size: 11px; background: rgba(255,255,255,0.08);
+  padding: 3px 10px; border-radius: 999px;
+  color: var(--muted); font-weight: 600;
+  letter-spacing: 0; text-transform: none;
+}
+.empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+.empty-state svg { width: 40px; height: 40px; margin-bottom: 12px; opacity: 0.4; }
+
+.qris-form .field { margin-bottom: 14px; }
+.qris-form input, .qris-form textarea {
+  width: 100%; background: rgba(0,0,0,0.3);
+  border: 1px solid var(--glass-border); border-radius: 12px;
+  padding: 13px 14px; color: var(--text);
+  font-size: 14px; font-family: inherit; outline: 0;
+  transition: border-color 0.2s;
+}
+.qris-form input:focus, .qris-form textarea:focus { border-color: rgba(0,214,143,0.5); }
+.qris-form textarea { min-height: 72px; resize: vertical; font-family: ui-monospace, monospace; font-size: 12px; }
+.drop-zone {
+  border: 1.5px dashed rgba(255,255,255,0.15);
+  border-radius: 12px; padding: 28px 16px;
+  text-align: center; color: var(--muted); font-size: 12px;
+  cursor: pointer; transition: 0.2s; margin-bottom: 14px;
+  display: block;
+}
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: rgba(0,214,143,0.4);
+  background: rgba(0,214,143,0.05);
+  color: var(--green);
+}
+.drop-zone svg { width: 28px; height: 28px; margin-bottom: 8px; opacity: 0.5; }
+.drop-zone.loading { pointer-events: none; opacity: 0.6; }
+.qris-result { margin-top: 16px; text-align: center; display: none; }
+.qris-result.show { display: block; }
+.qris-result img { max-width: 220px; border-radius: 12px; background: #fff; padding: 12px; margin-bottom: 12px; }
+.qris-result .amount { font-size: 20px; font-weight: 800; color: var(--green); margin-bottom: 4px; }
+.qris-status-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; margin-top: 8px;
+}
+.qris-status-badge.pending { background: rgba(255,159,67,0.15); color: var(--orange); border: 1px solid rgba(255,159,67,0.3); }
+.qris-status-badge.paid { background: rgba(0,214,143,0.15); color: var(--green); border: 1px solid rgba(0,214,143,0.3); }
+
+.qris-active-card {
+  display: none;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(0,214,143,0.1), rgba(0,179,119,0.04));
+  border: 1px solid rgba(0,214,143,0.3);
+  border-radius: 14px;
+  margin-bottom: 14px;
+}
+.qris-active-row { display: flex; align-items: center; gap: 12px; }
+.qris-active-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: rgba(0,214,143,0.2);
+  border: 1px solid rgba(0,214,143,0.4);
+  display: grid; place-items: center;
+  color: var(--green); font-weight: 800; flex-shrink: 0;
+}
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th {
+  text-align: left; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); padding: 0 0 10px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.data-table td { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: 0; }
+.status-pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.status-pill.paid, .status-pill.settlement, .status-pill.success { background: rgba(0,214,143,0.15); color: var(--green); }
+.status-pill.pending { background: rgba(255,159,67,0.15); color: var(--orange); }
+
+.profile-header { display: flex; align-items: center; gap: 14px; padding: 20px; margin-bottom: 14px; }
+.profile-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, #0d2a1f, #0a1a14);
+  border: 2px solid rgba(0,214,143,0.4);
+  display: grid; place-items: center;
+  font-size: 24px; font-weight: 800; color: var(--green); flex-shrink: 0;
+}
+.profile-name { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 3px; word-break: break-word; }
+.profile-sub { font-size: 12px; color: var(--muted); word-break: break-word; }
+.profile-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 14px; }
+.profile-item {
+  padding: 14px 16px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px; min-width: 0;
+}
+.profile-item .lbl {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 5px;
+}
+.profile-item .val { font-size: 14px; font-weight: 600; color: var(--text); word-break: break-word; }
+
+.qris-upload-zone {
+  border: 2px dashed rgba(255,255,255,0.2);
+  border-radius: 16px; padding: 40px 20px;
+  text-align: center; color: var(--muted);
+  cursor: pointer; transition: 0.2s;
+  background: rgba(0,0,0,0.2);
+}
+.qris-upload-zone:hover, .qris-upload-zone.dragover {
+  border-color: rgba(0,214,143,0.5);
+  background: rgba(0,214,143,0.05); color: var(--green);
+}
+.qris-upload-zone.loading { pointer-events: none; opacity: 0.6; }
+.qris-upload-zone svg { width: 44px; height: 44px; opacity: 0.6; }
+.qris-upload-preview {
+  padding: 16px; background: rgba(0,0,0,0.25);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px; display: flex; justify-content: center;
+  cursor: pointer; transition: 0.2s;
+}
+.qris-upload-preview:hover { border-color: rgba(0,214,143,0.4); }
+.qris-upload-preview.dragover { border-color: var(--green); background: rgba(0,214,143,0.05); }
+.qris-upload-preview.loading { pointer-events: none; opacity: 0.5; }
+.qris-upload-preview img { width: 220px; height: 220px; background: #fff; padding: 12px; border-radius: 12px; object-fit: contain; }
+.qris-upload-actions { display: flex; gap: 8px; margin-top: 12px; }
+.qris-upload-actions .btn { flex: 1; }
+.qris-string-label {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); margin: 18px 0 8px;
+}
+.qris-string-box {
+  font-family: ui-monospace, monospace;
+  font-size: 10px; line-height: 1.6; color: #a8b8c8;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px; padding: 12px;
+  word-break: break-all; max-height: 100px; overflow-y: auto;
+  cursor: default; user-select: text;
+}
+.qris-empty { text-align: center; padding: 30px 20px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.storage-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+.storage-badge.redis { background: rgba(0,214,143,0.12); color: #7dffc4; border: 1px solid rgba(0,214,143,0.25); }
+.storage-badge.local { background: rgba(255,159,67,0.12); color: #ffc78a; border: 1px solid rgba(255,159,67,0.25); }
+
+.apikey-input-row { display: flex; gap: 8px; align-items: stretch; }
+.apikey-input-row input {
+  flex: 1; background: rgba(0,0,0,0.3);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px; padding: 13px 14px;
+  color: var(--text); font-size: 14px; font-family: inherit; outline: 0;
+}
+.apikey-input-row input:focus { border-color: rgba(0,214,143,0.5); }
+.apikey-box {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px; padding: 12px;
+}
+.apikey-value {
+  flex: 1; font-family: ui-monospace, monospace;
+  font-size: 11px; line-height: 1.5;
+  color: #a8b8c8; word-break: break-all; min-width: 0;
+}
+.apikey-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.apikey-icon-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.05);
+  color: var(--muted); cursor: pointer;
+  display: grid; place-items: center;
+  transition: 0.15s; padding: 0;
+}
+.apikey-icon-btn:hover { color: var(--green); border-color: rgba(0,214,143,0.4); }
+.apikey-meta {
+  font-size: 11px; color: var(--muted);
+  margin-top: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.apikey-help {
+  font-size: 11px; color: var(--muted);
+  line-height: 1.55; margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(107,138,255,0.06);
+  border: 1px solid rgba(107,138,255,0.2);
+  border-radius: 10px;
+}
+.apikey-help code {
+  font-family: ui-monospace, monospace;
+  color: #7dffc4; font-size: 10.5px;
+  background: rgba(0,0,0,0.35);
+  padding: 1px 5px; border-radius: 4px;
+}
+.apikey-warn {
+  font-size: 11px; color: #ffc78a;
+  padding: 8px 10px; margin-top: 8px;
+  background: rgba(255,159,67,0.08);
+  border: 1px solid rgba(255,159,67,0.25);
+  border-radius: 8px; line-height: 1.5;
+}
+
+.console-fab {
+  position: fixed; bottom: 20px; right: 16px; z-index: 40;
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 16px; border-radius: 999px;
+  background: rgba(15,20,30,0.9);
+  border: 1px solid var(--glass-border2);
+  color: var(--text); font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  transition: 0.2s;
+}
+.console-fab:hover { border-color: var(--green); color: var(--green); }
+.console-drawer {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  max-width: 480px; margin: 0 auto; z-index: 50;
+  max-height: 55vh; display: none; flex-direction: column;
+  border-radius: 20px 20px 0 0; overflow: hidden;
+}
+.console-drawer.open { display: flex; }
+.console-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(10,14,20,0.95);
+  gap: 10px;
+}
+.console-head h3 {
+  font-size: 12px; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--green); flex: 1;
+}
+.console-head-actions { display: flex; gap: 6px; }
+.console-head-actions .btn {
+  margin: 0; padding: 6px 12px;
+  font-size: 11px; font-weight: 700; border-radius: 8px;
+  width: auto; border: 1px solid;
+}
+.console-body {
+  flex: 1; overflow-y: auto; padding: 8px 0;
+  background: rgba(8,11,16,0.98);
+  font-family: ui-monospace, Menlo, monospace; font-size: 11px;
+}
+.console-item {
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.console-item .time { color: var(--muted); white-space: nowrap; }
+.console-item .method { color: var(--green); font-weight: 600; }
+.console-item .status-code { margin-left: auto; font-weight: 700; color: var(--green); }
+.console-item .status-code.err { color: var(--red); }
+.console-item .copy-json {
+  font-size: 10px; color: var(--muted);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px; padding: 2px 6px;
+  cursor: pointer; margin-top: 4px; display: inline-block;
+}
+.console-empty { text-align: center; padding: 30px; color: var(--muted); font-size: 12px; }
+
+.toast {
+  position: fixed; bottom: 80px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 60;
+  background: #e8fff5; color: #03140e;
+  padding: 12px 20px; border-radius: 12px;
+  font-size: 13px; font-weight: 700;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  opacity: 0; pointer-events: none;
+  transition: 0.25s;
+  white-space: nowrap; max-width: 90vw;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ============ DOCS (REDESIGN) ============ */
+.docs-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 12px 16px;
+  background: rgba(15,20,30,0.6);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  margin-top: 16px; margin-bottom: 20px;
+  position: sticky; top: 8px; z-index: 20;
+}
+.docs-header .brand { font-size: 15px; }
+.docs-header .brand-logo { width: 32px; height: 32px; }
+.docs-header .brand-logo svg { width: 16px; height: 16px; }
+
+/* HERO */
+.docs-hero {
+  position: relative;
+  padding: 28px 24px;
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, rgba(0,214,143,0.08), rgba(124,107,255,0.05)),
+    rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.docs-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%; right: -20%;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(0,214,143,0.15), transparent 65%);
+  pointer-events: none;
+}
+.docs-hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px;
+  background: rgba(0,214,143,0.15);
+  border: 1px solid rgba(0,214,143,0.3);
+  color: #7dffc4;
+  margin-bottom: 14px;
+  position: relative;
+}
+.docs-hero-badge .pulse-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s infinite;
+}
+.docs-hero h1 {
+  font-size: 32px; font-weight: 800;
+  letter-spacing: -0.035em; line-height: 1.15;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #fff 20%, #7dffc4 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+}
+.docs-hero p {
+  color: var(--muted); font-size: 14px;
+  line-height: 1.6; max-width: 560px;
+  position: relative;
+}
+.docs-hero p strong { color: var(--text); font-weight: 700; }
+.docs-hero p code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  color: #7dffc4;
+  background: rgba(0,214,143,0.1);
+  padding: 1px 6px; border-radius: 5px;
+  border: 1px solid rgba(0,214,143,0.2);
+}
+
+.docs-base-url {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 16px; padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(0,214,143,0.25);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px; color: #7dffc4;
+  position: relative;
+  flex-wrap: wrap;
+}
+.docs-base-url .lbl {
+  font-size: 9px; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); flex-shrink: 0;
+}
+.docs-base-url .url {
+  flex: 1; min-width: 0;
+  word-break: break-all; color: #7dffc4;
+}
+.docs-base-url .copy-url {
+  width: 28px; height: 28px;
+  border-radius: 8px; flex-shrink: 0;
+  border: 1px solid rgba(0,214,143,0.3);
+  background: rgba(0,214,143,0.1);
+  color: #7dffc4; cursor: pointer;
+  display: grid; place-items: center;
+  transition: 0.15s;
+}
+.docs-base-url .copy-url:hover { background: rgba(0,214,143,0.2); }
+
+/* QUICK NAV */
+.docs-nav {
+  display: flex; gap: 8px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.docs-nav::-webkit-scrollbar { display: none; }
+.docs-nav-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--muted);
+  font-size: 12px; font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: 0.2s;
+  cursor: pointer;
+}
+.docs-nav-pill:hover {
+  color: var(--green);
+  border-color: rgba(0,214,143,0.4);
+  background: rgba(0,214,143,0.08);
+}
+.docs-nav-pill .num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; opacity: 0.7;
+}
+
+/* AUTH CARDS */
+.docs-auth-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.docs-auth-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+}
+.docs-auth-num {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(0,214,143,0.15);
+  border: 1px solid rgba(0,214,143,0.3);
+  color: var(--green);
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 800;
+  flex-shrink: 0;
+}
+.docs-auth-card .name {
+  font-size: 12px; font-weight: 700;
+  margin-bottom: 3px;
+}
+.docs-auth-card code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px; color: #7dffc4;
+  background: rgba(0,0,0,0.4);
+  padding: 2px 6px; border-radius: 5px;
+  word-break: break-all;
+}
+
+/* SECTIONS */
+.docs-section { margin-bottom: 28px; scroll-margin-top: 80px; }
+.docs-section-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; font-weight: 800;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.docs-section-title::before {
+  content: ''; width: 4px; height: 16px;
+  border-radius: 2px; background: var(--green);
+  box-shadow: 0 0 12px var(--green);
+}
+.docs-section-title .docs-count {
+  margin-left: auto;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: rgba(255,255,255,0.06);
+  padding: 3px 8px; border-radius: 999px;
+  text-transform: none;
+}
+
+/* ENDPOINT */
+.docs-endpoint {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
+}
+.docs-endpoint:hover {
+  border-color: var(--glass-border2);
+  background: rgba(255,255,255,0.05);
+}
+.docs-endpoint.open {
+  border-color: rgba(0,214,143,0.3);
+  background: rgba(0,214,143,0.02);
+}
+.docs-endpoint-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer; user-select: none;
+}
+.docs-method {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 800;
+  padding: 4px 9px; border-radius: 6px;
+  letter-spacing: 0.06em; flex-shrink: 0;
+  background: rgba(0,214,143,0.15);
+  color: var(--green);
+  border: 1px solid rgba(0,214,143,0.3);
+  min-width: 48px;
+  text-align: center;
+}
+.docs-method.post {
+  background: rgba(107,138,255,0.15);
+  color: var(--blue);
+  border-color: rgba(107,138,255,0.3);
+}
+.docs-method.del {
+  background: rgba(255,92,108,0.15);
+  color: var(--red);
+  border-color: rgba(255,92,108,0.3);
+}
+.docs-path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; font-weight: 500;
+  color: var(--text);
+  flex: 1; word-break: break-all;
+}
+.docs-chevron {
+  color: var(--muted);
+  transition: transform 0.25s;
+  flex-shrink: 0;
+}
+.docs-endpoint.open .docs-chevron { transform: rotate(180deg); color: var(--green); }
+
+.docs-endpoint-desc {
+  font-size: 12px; color: var(--muted);
+  padding: 0 16px 12px 74px;
+  margin-top: -6px;
+  line-height: 1.55;
+}
+.docs-endpoint-body {
+  display: none;
+  padding: 4px 16px 18px;
+  border-top: 1px solid var(--glass-border);
+  margin-top: 8px;
+  font-size: 13px;
+}
+.docs-endpoint.open .docs-endpoint-body {
+  display: block;
+  animation: fadeIn 0.25s ease;
+}
+.docs-params-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted);
+  margin: 14px 0 8px;
+}
+.docs-params-title svg { width: 12px; height: 12px; }
+.docs-params { display: flex; flex-direction: column; gap: 6px; }
+.docs-param {
+  display: flex; gap: 10px;
+  padding: 9px 12px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 9px; font-size: 12.5px;
+  align-items: center; flex-wrap: wrap;
+}
+.docs-param .name {
+  font-family: 'JetBrains Mono', monospace;
+  color: #b0a6ff; font-weight: 600;
+  flex-shrink: 0; min-width: 110px;
+}
+.docs-param .type {
+  color: var(--orange);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; flex-shrink: 0;
+}
+.docs-param .req {
+  color: #ff8a96;
+  font-size: 9px; font-weight: 800;
+  padding: 2px 6px;
+  background: rgba(255,92,108,0.15);
+  border: 1px solid rgba(255,92,108,0.3);
+  border-radius: 4px; flex-shrink: 0;
+  letter-spacing: 0.05em;
+}
+.docs-param .opt {
+  color: var(--muted);
+  font-size: 9px; font-weight: 700;
+  padding: 2px 6px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px; flex-shrink: 0;
+  letter-spacing: 0.05em;
+}
+.docs-param .desc {
+  color: var(--muted); flex: 1;
+  min-width: 180px; font-size: 12px;
+}
+
+/* CODE BLOCK */
+.docs-code {
+  position: relative;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+.docs-code-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid var(--glass-border);
+}
+.docs-code-head .dots {
+  display: flex; gap: 5px;
+}
+.docs-code-head .dots span {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+}
+.docs-code-head .dots span:first-child { background: rgba(255,92,108,0.6); }
+.docs-code-head .dots span:nth-child(2) { background: rgba(255,159,67,0.6); }
+.docs-code-head .dots span:nth-child(3) { background: rgba(0,214,143,0.6); }
+.docs-code-head .label {
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted);
+}
+.docs-code-head .copy {
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: 0.15s;
+}
+.docs-code-head .copy:hover {
+  color: var(--green);
+  border-color: rgba(0,214,143,0.4);
+  background: rgba(0,214,143,0.1);
+}
+.docs-code pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px; line-height: 1.7;
+  color: #a8b8c8;
+  white-space: pre;
+  padding: 12px 14px;
+  overflow-x: auto;
+}
+.tk-key { color: #6b8aff; }
+.tk-str { color: #7dffc4; }
+.tk-num { color: #ff9f43; }
+.tk-bool { color: #b0a6ff; }
+.tk-comment { color: #5a6a7a; font-style: italic; }
+.tk-cmd { color: #ffc78a; font-weight: 600; }
+
+/* NOTES */
+.docs-note {
+  display: flex; gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  margin-top: 12px;
+  line-height: 1.6;
+  align-items: flex-start;
+}
+.docs-note .ic {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.docs-note.info {
+  background: rgba(107,138,255,0.08);
+  border: 1px solid rgba(107,138,255,0.25);
+  color: #a5b8ff;
+}
+.docs-note.warn {
+  background: rgba(255,159,67,0.08);
+  border: 1px solid rgba(255,159,67,0.25);
+  color: #ffc78a;
+}
+.docs-note.success {
+  background: rgba(0,214,143,0.08);
+  border: 1px solid rgba(0,214,143,0.25);
+  color: #7dffc4;
+}
+.docs-note strong { color: inherit; font-weight: 700; }
+.docs-note code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: rgba(0,0,0,0.35);
+  padding: 1px 6px;
+  border-radius: 5px;
+  color: #7dffc4;
+}
+
+/* FOOTER */
+.docs-footer {
+  text-align: center;
+  padding: 24px 0 12px;
+  margin-top: 32px;
+  border-top: 1px solid var(--glass-border);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.docs-footer a {
+  color: var(--green);
+  text-decoration: none;
+  font-weight: 700;
+}
+.docs-footer a:hover { text-decoration: underline; }
+.docs-footer .ver {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  opacity: 0.7;
+  display: block;
+  margin-top: 4px;
+}
+
+@media (max-width: 600px) {
+  .docs-hero { padding: 22px 18px; }
+  .docs-hero h1 { font-size: 26px; }
+  .docs-endpoint-desc { padding-left: 16px; }
+  .docs-param .name { min-width: 0; }
+  .docs-header { flex-direction: column; align-items: stretch; padding: 12px; }
+  .docs-header .btn { width: 100%; }
+  .qris-upload-preview img { width: 180px; height: 180px; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="appRoot">
+  <header class="header">
+    <div class="brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00d68f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+      </div>
+      <span>GoMerch<em>Pro</em></span>
+    </div>
+    <div id="headerBadge" class="header-actions" style="display:none">
+      <button class="icon-btn" id="btnRefresh" onclick="refreshAll()" title="Refresh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M23 4v6h-6M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+      </button>
+      <div class="badge-connected"><span class="dot"></span> CONNECTED</div>
+    </div>
+  </header>
+
+  <section id="screen-login" class="screen active">
+    <div class="auth-wrap">
+      <div class="glass glass-strong auth-card">
+        <h1>Merchant Access</h1>
+        <p class="sub">Masuk ke dashboard GoBiz Merchant</p>
+        <div>
+          <label class="field-label">Nomor HP</label>
+          <div class="phone-row">
+            <span class="phone-prefix">+62</span>
+            <input type="tel" id="phoneInput" placeholder="81234567890" inputmode="numeric" autocomplete="tel">
+          </div>
+        </div>
+        <div style="margin-top:20px">
+          <button class="btn btn-primary" id="btnLogin" onclick="requestOtp()">
+            Lanjutkan
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <div class="error-msg" id="loginError"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-otp" class="screen">
+    <div class="auth-wrap">
+      <div class="glass glass-strong auth-card">
+        <div class="auth-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <h1>Verifikasi OTP</h1>
+        <p class="sub">Kode dikirim ke <strong id="otpPhoneDisplay" style="color:var(--text)">+62</strong></p>
+        <div class="otp-boxes" id="otpBoxes">
+          <input type="text" maxlength="1" inputmode="numeric" data-idx="0" autocomplete="one-time-code">
+          <input type="text" maxlength="1" inputmode="numeric" data-idx="1">
+          <input type="text" maxlength="1" inputmode="numeric" data-idx="2">
+          <input type="text" maxlength="1" inputmode="numeric" data-idx="3">
+        </div>
+        <p class="otp-hint">Tempel kode OTP, kolom akan terisi otomatis.</p>
+        <button class="btn btn-purple" id="btnVerify" onclick="verifyOtp()">Verifikasi</button>
+        <button class="btn btn-ghost" onclick="showScreen('login')">GANTI NOMOR HP</button>
+        <div class="error-msg" id="otpError"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-dashboard" class="screen">
+    <div class="glass token-card">
+      <div class="token-block">
+        <div class="token-label">Access Token</div>
+        <div class="token-box">
+          <div class="token-text" id="accessTokenText">—</div>
+          <div class="token-actions">
+            <button class="token-toggle" onclick="toggleToken('access')">
+              <span id="accessToggleLabel">TAMPILKAN</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <button class="copy-btn" onclick="copyText(state.accessToken)" title="Copy">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="token-block">
+        <div class="token-label">Refresh Token</div>
+        <div class="token-box">
+          <div class="token-text" id="refreshTokenText">—</div>
+          <div class="token-actions">
+            <button class="token-toggle" onclick="toggleToken('refresh')">
+              <span id="refreshToggleLabel">TAMPILKAN</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <button class="copy-btn" onclick="copyText(state.refreshToken)" title="Copy">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="token-status"><span class="dot"></span> Token aktif dan valid</div>
+      <div class="token-btns">
+        <button class="btn btn-sm btn-purple-soft" onclick="showScreen('docs')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          API Docs
+        </button>
+        <button class="btn btn-sm btn-outline" onclick="showScreen('profile')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>
+          Profile
+        </button>
+      </div>
+    </div>
+
+    <div class="menu-tabs">
+      <button class="menu-tab active" data-tab="qris" onclick="switchTab('qris')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><path d="M18 14v3h3"/></svg>
+        QRIS
+      </button>
+      <button class="menu-tab" data-tab="history" onclick="switchTab('history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        HISTORY
+      </button>
+      <button class="menu-tab" data-tab="payouts" onclick="switchTab('payouts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3 7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/></svg>
+        PAYOUTS
+      </button>
+    </div>
+
+    <div class="panel active" id="panel-qris">
+      <div class="glass panel-card">
+        <div class="panel-title">QRIS Dinamis</div>
+        <div class="qris-active-card" id="qrisActiveCard"></div>
+        <div class="qris-form">
+          <div class="field">
+            <label class="field-label">Nominal (IDR)</label>
+            <input type="number" id="qrisAmount" placeholder="30000" min="1">
+          </div>
+          <div id="qrisManualSection">
+            <label class="drop-zone" id="dropZone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              <div id="dropZoneText">DROP STATIC QR HERE OR CLICK</div>
+              <input type="file" id="qrFile" accept="image/*" style="display:none" onchange="handleQrFile(event)">
+            </label>
+            <div class="field" id="qrisStaticField">
+              <label class="field-label">Static QR String</label>
+              <textarea id="qrisStatic" placeholder="000201010212..."></textarea>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btnGenerateQris" onclick="generateQris()">Generate QR</button>
+        </div>
+        <div class="qris-result" id="qrisResult">
+          <img id="qrisImage" alt="QRIS" src="">
+          <div class="amount" id="qrisResultAmount"></div>
+          <div style="font-size:12px;color:var(--muted)" id="qrisResultTime"></div>
+          <div class="qris-status-badge pending" id="qrisStatusBadge">
+            <span>●</span> PENDING
+          </div>
+          <button class="btn btn-sm btn-outline" style="margin-top:12px;width:auto" onclick="checkQrisStatus()">Cek Status</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-history">
+      <div class="glass panel-card">
+        <div class="panel-title">
+          Recent History
+          <span class="count" id="historyCount">0 Items</span>
+        </div>
+        <div id="historyContent">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <div>NO DATA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-payouts">
+      <div class="glass panel-card">
+        <div class="panel-title">
+          Payout Records
+          <span class="count" id="payoutCount">0 Items</span>
+        </div>
+        <div id="payoutContent">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3 7 3"/></svg>
+            <div>NO DATA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-profile" class="screen">
+    <div class="docs-header">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#00d68f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <span>Merchant <em>Profile</em></span>
+      </div>
+      <button class="btn btn-sm btn-outline" style="width:auto" onclick="showScreen('dashboard')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Kembali
+      </button>
+    </div>
+
+    <div id="profileContent">
+      <div class="empty-state">Memuat…</div>
+    </div>
+
+    <div class="glass panel-card" style="margin-top:16px">
+      <div class="panel-title">
+        QRIS Statis
+        <span id="qrisStorageBadge"></span>
+      </div>
+      <div id="qrisSavedContent">
+        <div class="qris-empty">Memuat…</div>
+      </div>
+    </div>
+
+    <div class="glass panel-card" style="margin-top:16px">
+      <div class="panel-title">
+        API Key
+        <span id="apikeyStorageBadge"></span>
+      </div>
+      <div id="apikeyContent">
+        <div class="qris-empty">Memuat…</div>
+      </div>
+    </div>
+
+    <button class="btn btn-danger-soft" style="margin-top:16px" onclick="logout()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </button>
+  </section>
+
+  <!-- ============ DOCS (REDESIGN) ============ -->
+  <section id="screen-docs" class="screen">
+    <div class="docs-header">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#00d68f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <span>API <em>Docs</em></span>
+      </div>
+      <button class="btn btn-sm btn-outline" style="width:auto" onclick="showScreen('dashboard')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Kembali
+      </button>
+    </div>
+
+    <!-- HERO -->
+    <div class="docs-hero">
+      <div class="docs-hero-badge">
+        <span class="pulse-dot"></span> REST API • v2.2.0
+      </div>
+      <h1>GoPay Merchant API</h1>
+      <p>
+        Akses penuh ke <strong>profil merchant</strong>, <strong>riwayat QRIS</strong>,
+        <strong>payout</strong>, dan <strong>generator QRIS</strong>.
+        Semua endpoint bisa dipanggil via <code>API Key</code> tanpa perlu login ulang.
+      </p>
+      <div class="docs-base-url">
+        <span class="lbl">Base URL</span>
+        <span class="url" id="docsBaseUrl">—</span>
+        <button class="copy-url" id="btnCopyBaseUrl" title="Copy">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- QUICK NAV -->
+    <div class="docs-nav">
+      <a class="docs-nav-pill" onclick="document.getElementById('sec-auth').scrollIntoView({behavior:'smooth'});return false;">
+        <span class="num">01</span> Authentication
+      </a>
+      <a class="docs-nav-pill" onclick="document.getElementById('sec-apikey').scrollIntoView({behavior:'smooth'});return false;">
+        <span class="num">02</span> API Key
+      </a>
+      <a class="docs-nav-pill" onclick="document.getElementById('sec-merchant').scrollIntoView({behavior:'smooth'});return false;">
+        <span class="num">03</span> Merchant
+      </a>
+      <a class="docs-nav-pill" onclick="document.getElementById('sec-tx').scrollIntoView({behavior:'smooth'});return false;">
+        <span class="num">04</span> Transactions
+      </a>
+      <a class="docs-nav-pill" onclick="document.getElementById('sec-qris').scrollIntoView({behavior:'smooth'});return false;">
+        <span class="num">05</span> QRIS
+      </a>
+    </div>
+
+    <!-- ======= AUTH ======= -->
+    <div class="docs-section" id="sec-auth">
+      <div class="docs-section-title">01 • Authentication</div>
+
+      <div class="docs-auth-grid">
+        <div class="docs-auth-card">
+          <div class="docs-auth-num">1</div>
+          <div style="flex:1;min-width:0">
+            <div class="name">Query Parameter</div>
+            <code>?apikey=GoPay_xxx</code>
+          </div>
+        </div>
+        <div class="docs-auth-card">
+          <div class="docs-auth-num">2</div>
+          <div style="flex:1;min-width:0">
+            <div class="name">Header (API Key)</div>
+            <code>X-API-Key: GoPay_xxx</code>
+          </div>
+        </div>
+        <div class="docs-auth-card">
+          <div class="docs-auth-num">3</div>
+          <div style="flex:1;min-width:0">
+            <div class="name">Header (Bearer)</div>
+            <code>Authorization: Bearer GoPay_xxx</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-note info">
+        <span class="ic">💡</span>
+        <div>
+          Endpoint <code>/gopay/otp</code> dan <code>/gopay/token</code> <strong>tidak butuh</strong> API key.
+          Sisanya bisa pakai API key, <code>?token=</code> access token, atau keduanya.
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/otp</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Kirim kode OTP 4-digit ke nomor HP merchant via SMS.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Query Parameters
+          </div>
+          <div class="docs-params">
+            <div class="docs-param">
+              <span class="name">phone</span>
+              <span class="type">string</span>
+              <span class="req">REQ</span>
+              <span class="desc">Nomor HP tanpa +62 (contoh: 81234567890)</span>
+            </div>
+          </div>
+          <div class="docs-code">
+            <div class="docs-code-head">
+              <div class="dots"><span></span><span></span><span></span></div>
+              <span class="label">Request</span>
+              <button class="copy" onclick="docsCopy(event)">COPY</button>
+            </div>
+            <pre><span class="tk-cmd">GET</span> /gopay/otp?phone=<span class="tk-str">81234567890</span></pre>
+          </div>
+          <div class="docs-code">
+            <div class="docs-code-head">
+              <div class="dots"><span></span><span></span><span></span></div>
+              <span class="label">Response</span>
+              <button class="copy" onclick="docsCopy(event)">COPY</button>
+            </div>
+            <pre>{
+  <span class="tk-key">"success"</span>: <span class="tk-bool">true</span>,
+  <span class="tk-key">"data"</span>: {
+    <span class="tk-key">"otp_token"</span>: <span class="tk-str">"eyJhbGciOiJIUzI1NiIs..."</span>,
+    <span class="tk-key">"message"</span>: <span class="tk-str">"Kode OTP 4 digit telah dikirim via SMS"</span>
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/token</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Tukar OTP dengan access token & refresh token.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Query Parameters
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">otp</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Kode OTP 4 digit</span></div>
+            <div class="docs-param"><span class="name">otp_token</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Token dari response /gopay/otp</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= API KEY ======= -->
+    <div class="docs-section" id="sec-apikey">
+      <div class="docs-section-title">02 • API Key <span class="docs-count">3 endpoints</span></div>
+
+      <div class="docs-note success">
+        <span class="ic">🔑</span>
+        <div>
+          Generate API key di halaman <strong>Profile</strong>. API key memungkinkan akses
+          endpoint dari aplikasi eksternal tanpa login ulang. Kalau access token expired,
+          backend otomatis refresh menggunakan refresh token yang tersimpan.
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method post">POST</span>
+          <span class="docs-path">/gopay/apikey</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Generate API key baru. Key lama otomatis tidak valid.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/></svg>
+            Body (JSON)
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">phone</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Nomor HP merchant</span></div>
+            <div class="docs-param"><span class="name">access_token</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Access token GoBiz</span></div>
+            <div class="docs-param"><span class="name">refresh_token</span><span class="type">string</span><span class="opt">OPT</span><span class="desc">Untuk auto-refresh token</span></div>
+            <div class="docs-param"><span class="name">prefix</span><span class="type">string</span><span class="opt">OPT</span><span class="desc">Default "GoPay_" • 2-20 char alfanumerik + _ . -</span></div>
+          </div>
+          <div class="docs-code">
+            <div class="docs-code-head">
+              <div class="dots"><span></span><span></span><span></span></div>
+              <span class="label">Response</span>
+              <button class="copy" onclick="docsCopy(event)">COPY</button>
+            </div>
+            <pre>{
+  <span class="tk-key">"success"</span>: <span class="tk-bool">true</span>,
+  <span class="tk-key">"apikey"</span>: <span class="tk-str">"GoPay_a1b2c3d4..."</span>,
+  <span class="tk-key">"prefix"</span>: <span class="tk-str">"GoPay_"</span>,
+  <span class="tk-key">"created_at"</span>: <span class="tk-str">"2025-01-15T10:30:00.000Z"</span>,
+  <span class="tk-key">"storage"</span>: <span class="tk-str">"redis"</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/apikey</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Ambil info API key aktif milik merchant.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Query Parameters
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">phone</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Nomor HP merchant</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method del">DELETE</span>
+          <span class="docs-path">/gopay/apikey</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Hapus API key aktif.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Query / Body
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">phone</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Nomor HP merchant</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= MERCHANT ======= -->
+    <div class="docs-section" id="sec-merchant">
+      <div class="docs-section-title">03 • Merchant <span class="docs-count">3 endpoints</span></div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/validate</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Validasi token / API key dan ambil basic user info.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-note info" style="margin-top:0">
+            <span class="ic">🛡️</span>
+            <div>Cocok untuk cek apakah API key masih valid.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/profile</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Profil lengkap merchant — nama, email, nomor HP, merchant ID.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-code">
+            <div class="docs-code-head">
+              <div class="dots"><span></span><span></span><span></span></div>
+              <span class="label">Response</span>
+              <button class="copy" onclick="docsCopy(event)">COPY</button>
+            </div>
+            <pre>{
+  <span class="tk-key">"success"</span>: <span class="tk-bool">true</span>,
+  <span class="tk-key">"profile"</span>: {
+    <span class="tk-key">"name"</span>: <span class="tk-str">"Budi Santoso"</span>,
+    <span class="tk-key">"email"</span>: <span class="tk-str">"budi@mail.com"</span>,
+    <span class="tk-key">"phone"</span>: <span class="tk-str">"+62812345..."</span>,
+    <span class="tk-key">"merchant_id"</span>: <span class="tk-str">"G480199302"</span>
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/me</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Raw response dari GoBiz API (untuk debugging).</div>
+      </div>
+    </div>
+
+    <!-- ======= TRANSACTIONS ======= -->
+    <div class="docs-section" id="sec-tx">
+      <div class="docs-section-title">04 • Transactions <span class="docs-count">2 endpoints</span></div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/mutasi</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Riwayat transaksi QRIS. Default 7 hari terakhir.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Query Parameters
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">start_time</span><span class="type">ISO date</span><span class="opt">OPT</span><span class="desc">Default: 7 hari lalu</span></div>
+          </div>
+          <div class="docs-note success" style="margin-top:10px">
+            <span class="ic">✅</span>
+            <div>Field <code>amount</code> sudah dalam <strong>rupiah</strong> (bukan sen).</div>
+          </div>
+          <div class="docs-code">
+            <div class="docs-code-head">
+              <div class="dots"><span></span><span></span><span></span></div>
+              <span class="label">Response</span>
+              <button class="copy" onclick="docsCopy(event)">COPY</button>
+            </div>
+            <pre>{
+  <span class="tk-key">"success"</span>: <span class="tk-bool">true</span>,
+  <span class="tk-key">"total"</span>: <span class="tk-num">2</span>,
+  <span class="tk-key">"data"</span>: [
+    {
+      <span class="tk-key">"id"</span>: <span class="tk-str">"jrn_abc"</span>,
+      <span class="tk-key">"reference_id"</span>: <span class="tk-str">"REF001"</span>,
+      <span class="tk-key">"status"</span>: <span class="tk-str">"settlement"</span>,
+      <span class="tk-key">"time"</span>: <span class="tk-str">"2025-01-15T10:30:00Z"</span>,
+      <span class="tk-key">"amount"</span>: <span class="tk-num">1000</span>
+    }
+  ]
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/payouts</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Daftar payout / pencairan dana ke rekening bank.</div>
+      </div>
+    </div>
+
+    <!-- ======= QRIS ======= -->
+    <div class="docs-section" id="sec-qris">
+      <div class="docs-section-title">05 • QRIS <span class="docs-count">5 endpoints</span></div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/qris/create</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Generate QRIS dinamis dari static QR + nominal.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Query Parameters
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">amount</span><span class="type">number</span><span class="req">REQ</span><span class="desc">Nominal rupiah (contoh: 30000)</span></div>
+            <div class="docs-param"><span class="name">static_qr</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Payload QRIS statis</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/qris/status</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Cek status pembayaran QRIS — <strong>PAID</strong> atau <strong>PENDING</strong>.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Query Parameters
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">amount</span><span class="type">number</span><span class="req">REQ</span><span class="desc">Nominal rupiah yang di-generate</span></div>
+            <div class="docs-param"><span class="name">created_at</span><span class="type">ISO date</span><span class="req">REQ</span><span class="desc">Timestamp dari response create</span></div>
+          </div>
+          <div class="docs-note warn" style="margin-top:10px">
+            <span class="ic">⚠️</span>
+            <div><strong>Rate limit:</strong> jangan polling lebih dari 1x per 5 detik.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method post">POST</span>
+          <span class="docs-path">/gopay/qris/saved</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Simpan / ganti QRIS statis milik merchant.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/></svg>
+            Body (JSON)
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">phone</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Nomor HP merchant</span></div>
+            <div class="docs-param"><span class="name">static_qr</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Payload QRIS statis</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/qris/saved</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Ambil QRIS statis yang tersimpan.</div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method del">DELETE</span>
+          <span class="docs-path">/gopay/qris/saved</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Hapus QRIS statis yang tersimpan.</div>
+      </div>
+    </div>
+
+    <!-- ======= CONTOH ======= -->
+    <div class="docs-section">
+      <div class="docs-section-title">Contoh Integrasi</div>
+
+      <div class="docs-code">
+        <div class="docs-code-head">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <span class="label">cURL</span>
+          <button class="copy" onclick="docsCopy(event)">COPY</button>
+        </div>
+        <pre><span class="tk-comment"># Ambil profil via API Key</span>
+<span class="tk-cmd">curl</span> -H <span class="tk-str">"X-API-Key: GoPay_xxx"</span> \
+  <span class="tk-str">"https://yourapp.vercel.app/gopay/profile"</span></pre>
+      </div>
+
+      <div class="docs-code">
+        <div class="docs-code-head">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <span class="label">JavaScript</span>
+          <button class="copy" onclick="docsCopy(event)">COPY</button>
+        </div>
+        <pre><span class="tk-comment">// Fetch riwayat transaksi</span>
+<span class="tk-cmd">const</span> res = <span class="tk-cmd">await</span> fetch(
+  <span class="tk-str">"https://yourapp.vercel.app/gopay/mutasi?apikey=GoPay_xxx"</span>
+);
+<span class="tk-cmd">const</span> data = <span class="tk-cmd">await</span> res.json();
+console.log(data.data);</pre>
+      </div>
+
+      <div class="docs-code">
+        <div class="docs-code-head">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <span class="label">Python</span>
+          <button class="copy" onclick="docsCopy(event)">COPY</button>
+        </div>
+        <pre><span class="tk-cmd">import</span> requests
+
+headers = {<span class="tk-str">"X-API-Key"</span>: <span class="tk-str">"GoPay_xxx"</span>}
+r = requests.get(
+    <span class="tk-str">"https://yourapp.vercel.app/gopay/profile"</span>,
+    headers=headers
+)
+<span class="tk-cmd">print</span>(r.json())</pre>
+      </div>
+    </div>
+
+    <div class="docs-footer">
+      <div>GoMerchPro API — Documentation</div>
+      <a href="#" onclick="showScreen('dashboard');return false;">← Kembali ke Dashboard</a>
+      <span class="ver">v2.2.0 • Build stable</span>
+    </div>
+  </section>
+</div>
+
+<button class="console-fab" id="consoleFab" onclick="toggleConsole()" style="display:none">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+  CONSOLE
+</button>
+<div class="console-drawer glass-strong" id="consoleDrawer">
+  <div class="console-head">
+    <h3>API Traffic Monitor</h3>
+    <div class="console-head-actions">
+      <button class="btn btn-sm btn-ghost" onclick="clearConsole()">CLEAR</button>
+      <button class="btn btn-sm btn-danger-soft" onclick="toggleConsole(false)">CLOSE ✕</button>
+    </div>
+  </div>
+  <div class="console-body" id="consoleBody">
+    <div class="console-empty">Belum ada request</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const state = {
+  phone: '',
+  otpToken: '',
+  accessToken: '',
+  refreshToken: '',
+  qrisCreatedAt: null,
+  qrisAmount: null,
+  accessExpanded: false,
+  refreshExpanded: false,
+  logs: [],
+  historyLoaded: false,
+  payoutsLoaded: false,
+  profileLoaded: false,
+  savedQris: null,
+  storageMode: 'none',
+  apiKey: null,
+  apiKeyPrefix: 'GoPay_',
+  apiKeyCreatedAt: null,
+  apiKeyStorage: 'none',
+  apiKeyRevealed: false
+};
+
+(function detectLowEnd() {
+  try {
+    const cores = navigator.hardwareConcurrency || 4;
+    const mem = navigator.deviceMemory || 4;
+    if (cores <= 4 || mem <= 2) document.documentElement.classList.add('reduced');
+  } catch (_) {}
+})();
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(window._toastT);
+  window._toastT = setTimeout(() => el.classList.remove('show'), 2200);
+}
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = typeof msg === 'object' ? JSON.stringify(msg) : String(msg);
+  el.classList.add('show');
+}
+function hideError(id) { document.getElementById(id)?.classList.remove('show'); }
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name)?.classList.add('active');
+  const app = document.getElementById('appRoot');
+  const connected = name === 'dashboard';
+  const wideMode = name === 'docs' || name === 'profile';
+  app.classList.toggle('docs-mode', wideMode);
+  document.getElementById('headerBadge').style.display = connected ? 'flex' : 'none';
+  document.getElementById('consoleFab').style.display = connected ? '' : 'none';
+  if (!connected) toggleConsole(false);
+  window.scrollTo({ top: 0, behavior: 'auto' });
+  if (name === 'profile') loadProfile();
+}
+
+function maskToken(t) {
+  if (!t) return '—';
+  if (t.length <= 40) return t;
+  return t.slice(0, 36) + '…' + t.slice(-12);
+}
+function renderTokens() {
+  const at = document.getElementById('accessTokenText');
+  const rt = document.getElementById('refreshTokenText');
+  at.textContent = state.accessExpanded ? (state.accessToken || '—') : maskToken(state.accessToken);
+  rt.textContent = state.refreshExpanded ? (state.refreshToken || '—') : maskToken(state.refreshToken);
+  at.classList.toggle('expanded', state.accessExpanded);
+  rt.classList.toggle('expanded', state.refreshExpanded);
+  document.getElementById('accessToggleLabel').textContent = state.accessExpanded ? 'SEMBUNYIKAN' : 'TAMPILKAN';
+  document.getElementById('refreshToggleLabel').textContent = state.refreshExpanded ? 'SEMBUNYIKAN' : 'TAMPILKAN';
+}
+function toggleToken(which) {
+  if (which === 'access') state.accessExpanded = !state.accessExpanded;
+  else state.refreshExpanded = !state.refreshExpanded;
+  renderTokens();
+}
+async function copyText(t) {
+  if (!t) return toast('Kosong');
+  try {
+    await navigator.clipboard.writeText(t);
+    toast('Copied to clipboard');
+  } catch { toast('Gagal menyalin'); }
+}
+function formatRupiah(n) {
+  if (n == null || isNaN(Number(n))) return 'Rp 0';
+  return 'Rp ' + Number(n).toLocaleString('id-ID');
+}
+function formatTime(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  } catch { return iso; }
+}
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function maskApiKey(key) {
+  if (!key) return '';
+  if (key.length <= 16) return key;
+  return key.slice(0, 10) + '…' + key.slice(-6);
+}
+
+function addLog(method, path, status, data) {
+  const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  state.logs.unshift({ time, method, path, status, data });
+  if (state.logs.length > 30) state.logs.pop();
+  renderConsole();
+}
+function renderConsole() {
+  const body = document.getElementById('consoleBody');
+  if (!state.logs.length) {
+    body.innerHTML = '<div class="console-empty">Belum ada request</div>';
+    return;
+  }
+  body.innerHTML = state.logs.map((l, i) => `
+    <div class="console-item">
+      <div style="flex:1">
+        <div><span class="time">${l.time}</span> &nbsp; <span class="method">${l.method}</span> ${l.path}</div>
+        <button class="copy-json" onclick="copyText(JSON.stringify(state.logs[${i}].data,null,2))">Copy JSON</button>
+      </div>
+      <span class="status-code ${l.status >= 400 ? 'err' : ''}">${l.status}</span>
+    </div>
+  `).join('');
+}
+function clearConsole() { state.logs = []; renderConsole(); }
+function toggleConsole(force) {
+  const d = document.getElementById('consoleDrawer');
+  if (typeof force === 'boolean') d.classList.toggle('open', force);
+  else d.classList.toggle('open');
+}
+document.addEventListener('click', (e) => {
+  const d = document.getElementById('consoleDrawer');
+  const f = document.getElementById('consoleFab');
+  if (!d.classList.contains('open')) return;
+  if (d.contains(e.target) || f.contains(e.target)) return;
+  d.classList.remove('open');
+}, true);
+
+async function api(path, params = {}) {
+  const u = new URL(path, location.origin);
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') u.searchParams.set(k, v);
+  });
+  try {
+    const r = await fetch(u);
+    const text = await r.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+    addLog('GET', path, r.status, data);
+    return { ok: r.ok, status: r.status, data };
+  } catch (e) {
+    addLog('GET', path, 0, { error: e.message });
+    return { ok: false, status: 0, data: { success: false, error: e.message } };
+  }
+}
+async function apiJson(method, path, body) {
+  try {
+    const r = await fetch(path, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const text = await r.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+    addLog(method, path, r.status, data);
+    return { ok: r.ok, status: r.status, data };
+  } catch (e) {
+    addLog(method, path, 0, { error: e.message });
+    return { ok: false, status: 0, data: { success: false, error: e.message } };
+  }
+}
+
+async function refreshAll() {
+  const btn = document.getElementById('btnRefresh');
+  btn.classList.add('spinning');
+  try {
+    if (state.accessToken) {
+      const v = await api('/gopay/validate', { token: state.accessToken });
+      if (v.status === 401) { logout(); return; }
+    }
+    state.historyLoaded = false;
+    state.payoutsLoaded = false;
+    state.profileLoaded = false;
+
+    const profileScreen = document.getElementById('screen-profile');
+    if (profileScreen && profileScreen.classList.contains('active')) {
+      await loadProfile();
+    } else {
+      const activeTab = document.querySelector('.menu-tab.active')?.dataset.tab;
+      if (activeTab === 'payouts') await loadPayouts();
+      else if (activeTab === 'qris') await renderQrisPanel();
+      else await loadHistory();
+    }
+    toast('Refreshed ✅');
+  } finally {
+    setTimeout(() => btn.classList.remove('spinning'), 400);
+  }
+}
+
+async function requestOtp() {
+  hideError('loginError');
+  let phone = document.getElementById('phoneInput').value.trim().replace(/\D/g, '');
+  if (phone.startsWith('62')) phone = phone.slice(2);
+  if (phone.startsWith('0')) phone = phone.slice(1);
+  if (!phone || phone.length < 9) {
+    showError('loginError', 'Masukkan nomor HP yang valid');
+    return;
+  }
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span> Mengirim OTP…';
+
+  const res = await api('/gopay/otp', { phone });
+  btn.disabled = false;
+  btn.innerHTML = 'Lanjutkan <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+
+  if (!res.ok || !res.data.success) {
+    const err = res.data.error;
+    showError('loginError', typeof err === 'object' ? (err.message || JSON.stringify(err)) : (err || 'Gagal mengirim OTP'));
+    return;
+  }
+  state.phone = phone;
+  state.otpToken = res.data.data?.otp_token || '';
+  document.getElementById('otpPhoneDisplay').textContent = '+62' + phone;
+  document.querySelectorAll('#otpBoxes input').forEach(i => i.value = '');
+  showScreen('otp');
+  document.querySelector('#otpBoxes input')?.focus();
+}
+
+async function verifyOtp() {
+  hideError('otpError');
+  const digits = [...document.querySelectorAll('#otpBoxes input')].map(i => i.value).join('');
+  if (!/^\d{4}$/.test(digits)) {
+    showError('otpError', 'Masukkan kode OTP 4 digit');
+    return;
+  }
+  const btn = document.getElementById('btnVerify');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner" style="border-top-color:#fff"></span> Memverifikasi…';
+
+  const res = await api('/gopay/token', { otp: digits, otp_token: state.otpToken });
+  btn.disabled = false;
+  btn.textContent = 'Verifikasi';
+
+  if (!res.ok || !res.data.success) {
+    const err = res.data.error;
+    showError('otpError', typeof err === 'object' ? (err.message || JSON.stringify(err)) : (err || 'OTP salah atau kedaluwarsa'));
+    return;
+  }
+  const d = res.data.data || res.data;
+  state.accessToken = d.access_token || d.data?.access_token || '';
+  state.refreshToken = d.refresh_token || d.data?.refresh_token || '';
+
+  try {
+    localStorage.setItem('gm_access', state.accessToken);
+    localStorage.setItem('gm_refresh', state.refreshToken);
+    localStorage.setItem('gm_phone', state.phone);
+  } catch (_) {}
+
+  renderTokens();
+  showScreen('dashboard');
+  toast('Login berhasil');
+  state.historyLoaded = false;
+  state.profileLoaded = false;
+  state.savedQris = null;
+  state.apiKey = null;
+  state.apiKeyStorage = 'none';
+  loadHistory();
+}
+
+function logout() {
+  state.accessToken = '';
+  state.refreshToken = '';
+  state.otpToken = '';
+  state.historyLoaded = false;
+  state.payoutsLoaded = false;
+  state.profileLoaded = false;
+  state.savedQris = null;
+  state.storageMode = 'none';
+  state.apiKey = null;
+  state.apiKeyStorage = 'none';
+  state.apiKeyRevealed = false;
+  try {
+    localStorage.removeItem('gm_access');
+    localStorage.removeItem('gm_refresh');
+    localStorage.removeItem('gm_phone');
+  } catch (_) {}
+  showScreen('login');
+  toast('Logged out');
+}
+
+async function switchTab(tab) {
+  document.querySelectorAll('.menu-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab)?.classList.add('active');
+  if (tab === 'history' && !state.historyLoaded) loadHistory();
+  if (tab === 'payouts' && !state.payoutsLoaded) loadPayouts();
+  if (tab === 'qris') await renderQrisPanel();
+}
+
+async function ensureSavedQrisLoaded() {
+  if (state.savedQris) return state.savedQris;
+  if (!state.phone) return null;
+
+  const res = await api('/gopay/qris/saved', { phone: state.phone });
+  if (res.ok && res.data.success && res.data.static_qr) {
+    state.savedQris = res.data.static_qr;
+    state.storageMode = 'redis';
+    return state.savedQris;
+  }
+  try {
+    const local = localStorage.getItem('gm_qris_' + state.phone);
+    if (local) {
+      state.savedQris = local;
+      state.storageMode = 'local';
+      return state.savedQris;
+    }
+  } catch (_) {}
+  return null;
+}
+
+async function renderQrisPanel() {
+  await ensureSavedQrisLoaded();
+
+  const hasQris = !!state.savedQris;
+  const activeCard = document.getElementById('qrisActiveCard');
+  const manualSection = document.getElementById('qrisManualSection');
+
+  if (hasQris) {
+    manualSection.style.display = 'none';
+    activeCard.style.display = 'block';
+    const tail = state.savedQris.slice(-8);
+    activeCard.innerHTML = `
+      <div class="qris-active-row">
+        <div class="qris-active-icon">✓</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:13px">QRIS Aktif</div>
+          <div style="font-size:11px;color:var(--muted);font-family:ui-monospace,monospace;word-break:break-all">•••${escapeHtml(tail)}</div>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-outline" style="margin-top:12px;width:100%" onclick="showScreen('profile')">
+        Ubah di Profile →
+      </button>
+    `;
+  } else {
+    manualSection.style.display = 'block';
+    activeCard.style.display = 'none';
+  }
+}
+
+async function loadHistory() {
+  if (!state.accessToken) return;
+  const content = document.getElementById('historyContent');
+  content.innerHTML = '<div class="empty-state">Memuat…</div>';
+  const res = await api('/gopay/mutasi', { token: state.accessToken });
+  if (!res.ok || !res.data.success) {
+    content.innerHTML = `<div class="empty-state">${escapeHtml(typeof res.data.error === 'object' ? JSON.stringify(res.data.error) : res.data.error) || 'Gagal memuat'}</div>`;
+    return;
+  }
+  state.historyLoaded = true;
+  const list = res.data.data || [];
+  document.getElementById('historyCount').textContent = list.length + ' Items';
+  if (!list.length) {
+    content.innerHTML = '<div class="empty-state"><div>NO DATA</div></div>';
+    return;
+  }
+  content.innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>ID REF</th><th>WAKTU</th><th>NOMINAL</th></tr></thead>
+      <tbody>
+        ${list.map(item => `
+          <tr>
+            <td style="font-family:monospace;font-size:11px;max-width:100px;overflow:hidden;text-overflow:ellipsis" title="${escapeHtml(item.reference_id || item.id)}">${escapeHtml(item.reference_id || item.id || '—')}</td>
+            <td>${escapeHtml(formatTime(item.time))}</td>
+            <td style="font-weight:600;color:var(--green)">${formatRupiah(item.amount || 0)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function loadPayouts() {
+  if (!state.accessToken) return;
+  const content = document.getElementById('payoutContent');
+  content.innerHTML = '<div class="empty-state">Memuat…</div>';
+  const res = await api('/gopay/payouts', { token: state.accessToken });
+  if (!res.ok || !res.data.success) {
+    content.innerHTML = `<div class="empty-state">${escapeHtml(typeof res.data.error === 'object' ? JSON.stringify(res.data.error) : res.data.error) || 'Gagal memuat'}</div>`;
+    return;
+  }
+  state.payoutsLoaded = true;
+  const raw = res.data.data;
+  const list = Array.isArray(raw) ? raw : (raw?.data || raw?.payouts || raw?.items || []);
+  document.getElementById('payoutCount').textContent = list.length + ' Items';
+  if (!list.length) {
+    content.innerHTML = '<div class="empty-state"><div>NO DATA</div></div>';
+    return;
+  }
+  content.innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>BANK</th><th>RECIPIENT</th><th>STATUS</th></tr></thead>
+      <tbody>
+        ${list.map(item => {
+          const bank = item.bank_name || item.bank || item.channel || item.payment_method || 'GOPAY';
+          const name = item.account_name || item.recipient_name || item.name || item.beneficiary_name || '—';
+          const st = (item.status || item.state || 'PAID').toString().toUpperCase();
+          return `<tr>
+            <td style="font-weight:700">${escapeHtml(bank)}</td>
+            <td>${escapeHtml(name)}</td>
+            <td><span class="status-pill ${st.toLowerCase().includes('paid') || st.toLowerCase().includes('success') ? 'paid' : 'pending'}">${escapeHtml(st)}</span></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function loadProfile() {
+  if (!state.accessToken) return;
+  const content = document.getElementById('profileContent');
+  content.innerHTML = '<div class="empty-state">Memuat profil…</div>';
+
+  const res = await api('/gopay/profile', { token: state.accessToken });
+  if (!res.ok || !res.data.success) {
+    content.innerHTML = '<div class="empty-state">Gagal memuat profil</div>';
+    return;
+  }
+  const p = res.data.profile;
+  state.profileLoaded = true;
+  const initial = (p.name || '?').trim().charAt(0).toUpperCase();
+
+  content.innerHTML = `
+    <div class="glass profile-header">
+      <div class="profile-avatar">${escapeHtml(initial)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="profile-name">${escapeHtml(p.name || '—')}</div>
+        <div class="profile-sub">${p.merchant_id ? 'ID: ' + escapeHtml(p.merchant_id) : 'Merchant GoBiz'}</div>
+      </div>
+    </div>
+
+    <div class="profile-grid">
+      <div class="profile-item">
+        <div class="lbl">Nama Lengkap</div>
+        <div class="val">${escapeHtml(p.name || '—')}</div>
+      </div>
+      <div class="profile-item">
+        <div class="lbl">Email</div>
+        <div class="val">${escapeHtml(p.email || '—')}</div>
+      </div>
+      <div class="profile-item">
+        <div class="lbl">No. HP</div>
+        <div class="val">${escapeHtml(p.phone || (state.phone ? '+62' + state.phone : '—'))}</div>
+      </div>
+    </div>
+  `;
+
+  loadSavedQris();
+  loadApiKey();
+}
+
+function qrisStorageKey() { return 'gm_qris_' + (state.phone || 'anon'); }
+function setQrisStorageBadge() {
+  const el = document.getElementById('qrisStorageBadge');
+  if (!el) return;
+  if (state.storageMode === 'redis') el.innerHTML = '<span class="storage-badge redis">☁️ Cloud</span>';
+  else if (state.storageMode === 'local') el.innerHTML = '<span class="storage-badge local">💾 Lokal</span>';
+  else el.innerHTML = '';
+}
+
+async function loadSavedQris() {
+  if (!state.phone) return;
+  const content = document.getElementById('qrisSavedContent');
+  content.innerHTML = '<div class="qris-empty">Memuat…</div>';
+
+  const res = await api('/gopay/qris/saved', { phone: state.phone });
+  if (res.ok && res.data.success && res.data.static_qr) {
+    state.savedQris = res.data.static_qr;
+    state.storageMode = 'redis';
+    setQrisStorageBadge();
+    renderQrisUploadFilled(res.data.static_qr);
+    return;
+  }
+
+  try {
+    const local = localStorage.getItem(qrisStorageKey());
+    if (local) {
+      state.savedQris = local;
+      state.storageMode = 'local';
+      setQrisStorageBadge();
+      renderQrisUploadFilled(local);
+      return;
+    }
+  } catch (_) {}
+
+  state.savedQris = null;
+  state.storageMode = 'none';
+  setQrisStorageBadge();
+  renderQrisUploadEmpty();
+}
+
+function renderQrisUploadEmpty() {
+  const content = document.getElementById('qrisSavedContent');
+  content.innerHTML = `
+    <div class="qris-upload-zone" id="qrisUploadZone">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <div style="font-weight:700;color:var(--text);font-size:14px;margin-top:12px">PILIH GAMBAR QRIS</div>
+      <div style="font-size:11px;margin-top:6px;color:var(--muted)">JPG / PNG — auto baca static QR</div>
+    </div>
+    <input type="file" id="qrisUploadInput" accept="image/*" style="display:none">
+  `;
+  bindQrisUpload();
+}
+
+function renderQrisUploadFilled(qr) {
+  const content = document.getElementById('qrisSavedContent');
+  content.innerHTML = `
+    <div class="qris-upload-preview" id="qrisUploadZone">
+      <img id="savedQrisImg" alt="QRIS" src="">
+    </div>
+    <input type="file" id="qrisUploadInput" accept="image/*" style="display:none">
+    <div class="qris-upload-actions">
+      <button class="btn btn-sm btn-purple-soft" id="btnReplaceQris">GANTI GAMBAR</button>
+      <button class="btn btn-sm btn-danger-soft" id="btnDeleteQris">HAPUS</button>
+    </div>
+    <div class="qris-string-label">Static QR String (readonly)</div>
+    <div class="qris-string-box" id="savedQrisString">${escapeHtml(qr)}</div>
+  `;
+  renderQrImage(qr);
+  bindQrisUpload();
+  document.getElementById('btnReplaceQris').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('qrisUploadInput').click();
+  });
+  document.getElementById('btnDeleteQris').addEventListener('click', deleteQris);
+}
+
+function renderQrImage(qrString) {
+  const img = document.getElementById('savedQrisImg');
+  if (!img) return;
+  const encoded = encodeURIComponent(qrString);
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=440x440&margin=10&data=${encoded}`;
+  img.onerror = () => {
+    img.style.display = 'none';
+    const note = document.createElement('div');
+    note.textContent = 'Preview gagal dimuat';
+    note.style.cssText = 'color:#8b9aab;font-size:11px;text-align:center;padding:20px';
+    img.parentNode.appendChild(note);
+  };
+}
+
+function bindQrisUpload() {
+  const zone = document.getElementById('qrisUploadZone');
+  const input = document.getElementById('qrisUploadInput');
+  if (!zone || !input) return;
+  zone.addEventListener('click', (e) => { if (e.target !== input) input.click(); });
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', async e => {
+    e.preventDefault(); zone.classList.remove('dragover');
+    const f = e.dataTransfer?.files?.[0];
+    if (f) await processQrisUpload(f);
+  });
+  input.addEventListener('change', async e => {
+    const f = e.target.files?.[0];
+    if (f) await processQrisUpload(f);
+    input.value = '';
+  });
+}
+
+async function processQrisUpload(file) {
+  const zone = document.getElementById('qrisUploadZone');
+  zone?.classList.add('loading');
+  try {
+    toast('Membaca QR…');
+    const str = await decodeQrFromFile(file);
+
+    const res = await apiJson('POST', '/gopay/qris/saved', {
+      phone: state.phone, static_qr: str
+    });
+
+    if (res.ok && res.data.success) {
+      state.savedQris = str;
+      state.storageMode = 'redis';
+      setQrisStorageBadge();
+      toast('QRIS tersimpan di cloud ☁️');
+      renderQrisUploadFilled(str);
+      return;
+    }
+
+    try {
+      localStorage.setItem(qrisStorageKey(), str);
+      state.savedQris = str;
+      state.storageMode = 'local';
+      setQrisStorageBadge();
+      toast('QRIS tersimpan di browser 💾');
+      renderQrisUploadFilled(str);
+    } catch (e) {
+      toast('Gagal simpan QRIS');
+    }
+  } catch (err) {
+    toast(err.message || 'Gagal decode QR');
+  } finally {
+    zone?.classList.remove('loading');
+  }
+}
+
+async function deleteQris() {
+  if (!confirm('Hapus QRIS tersimpan?')) return;
+  await apiJson('DELETE', '/gopay/qris/saved', { phone: state.phone });
+  try { localStorage.removeItem(qrisStorageKey()); } catch (_) {}
+  state.savedQris = null;
+  state.storageMode = 'none';
+  setQrisStorageBadge();
+  toast('QRIS dihapus');
+  renderQrisUploadEmpty();
+}
+
+function decodeQrFromFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file.type || !file.type.startsWith('image/')) return reject(new Error('File bukan gambar'));
+    if (typeof jsQR !== 'function') return reject(new Error('Library jsQR belum termuat'));
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const MAX = 1200;
+          let w = img.width, h = img.height;
+          if (w > MAX || h > MAX) {
+            const r = Math.min(MAX / w, MAX / h);
+            w = Math.round(w * r); h = Math.round(h * r);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(img, 0, 0, w, h);
+          const d = ctx.getImageData(0, 0, w, h);
+          const code = jsQR(d.data, d.width, d.height, { inversionAttempts: 'attemptBoth' });
+          if (code && code.data) resolve(code.data);
+          else reject(new Error('QR tidak terdeteksi, coba gambar lebih jelas'));
+        } catch (err) { reject(err); }
+      };
+      img.onerror = () => reject(new Error('Gagal memuat gambar'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error('Gagal membaca file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function processQrFile(file) {
+  const zone = document.getElementById('dropZone');
+  const label = document.getElementById('dropZoneText');
+  const originalText = label.textContent;
+  zone.classList.add('loading');
+  label.textContent = 'MEMBACA QR…';
+  try {
+    const str = await decodeQrFromFile(file);
+    document.getElementById('qrisStatic').value = str;
+    toast('QR berhasil terbaca ✅');
+  } catch (err) {
+    toast(err.message || 'Gagal decode QR');
+  } finally {
+    zone.classList.remove('loading');
+    label.textContent = originalText;
+  }
+}
+
+function handleQrFile(e) {
+  const file = e.target.files?.[0];
+  if (file) processQrFile(file);
+  e.target.value = '';
+}
+
+async function generateQris() {
+  const amount = document.getElementById('qrisAmount').value.trim();
+  const staticQr = state.savedQris || document.getElementById('qrisStatic').value.trim();
+  if (!amount) { toast('Isi nominal'); return; }
+  if (!staticQr) { toast('QRIS belum diset — upload di Profile atau drop gambar'); return; }
+
+  const btn = document.getElementById('btnGenerateQris');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span> Generating…';
+
+  const res = await api('/gopay/qris/create', { amount, static_qr: staticQr });
+  btn.disabled = false;
+  btn.textContent = 'Generate QR';
+
+  if (!res.ok || !res.data.success) {
+    toast(typeof res.data.error === 'object' ? JSON.stringify(res.data.error) : (res.data.error || 'Gagal generate'));
+    return;
+  }
+  state.qrisCreatedAt = res.data.created_at;
+  state.qrisAmount = res.data.amount;
+  document.getElementById('qrisImage').src = res.data.image_url;
+  document.getElementById('qrisResultAmount').textContent = formatRupiah(res.data.amount);
+  document.getElementById('qrisResultTime').textContent = formatTime(res.data.created_at);
+  document.getElementById('qrisStatusBadge').className = 'qris-status-badge pending';
+  document.getElementById('qrisStatusBadge').innerHTML = '<span>●</span> PENDING';
+  document.getElementById('qrisResult').classList.add('show');
+  toast('QRIS berhasil dibuat');
+  state.historyLoaded = false;
+}
+
+async function checkQrisStatus() {
+  if (!state.accessToken || !state.qrisAmount || !state.qrisCreatedAt) {
+    toast('Generate QRIS dulu');
+    return;
+  }
+  const res = await api('/gopay/qris/status', {
+    token: state.accessToken,
+    amount: state.qrisAmount,
+    created_at: state.qrisCreatedAt
+  });
+  if (!res.ok || !res.data.success) { toast('Gagal cek status'); return; }
+  const st = res.data.status;
+  const badge = document.getElementById('qrisStatusBadge');
+  if (st === 'PAID') {
+    badge.className = 'qris-status-badge paid';
+    badge.innerHTML = '<span>●</span> PAID';
+    toast('Pembayaran diterima!');
+    state.historyLoaded = false;
+  } else {
+    badge.className = 'qris-status-badge pending';
+    badge.innerHTML = '<span>●</span> PENDING';
+    toast('Masih menunggu pembayaran');
+  }
+}
+
+function apiKeyStorageKey() { return 'gm_apikey_' + (state.phone || 'anon'); }
+function setApiKeyStorageBadge() {
+  const el = document.getElementById('apikeyStorageBadge');
+  if (!el) return;
+  if (state.apiKeyStorage === 'redis') el.innerHTML = '<span class="storage-badge redis">☁️ Cloud</span>';
+  else if (state.apiKeyStorage === 'local') el.innerHTML = '<span class="storage-badge local">💾 Lokal</span>';
+  else el.innerHTML = '';
+}
+
+async function loadApiKey() {
+  if (!state.phone) return;
+  const content = document.getElementById('apikeyContent');
+  content.innerHTML = '<div class="qris-empty">Memuat…</div>';
+
+  const res = await api('/gopay/apikey', { phone: state.phone });
+  if (res.ok && res.data.success && res.data.apikey) {
+    state.apiKey = res.data.apikey;
+    state.apiKeyPrefix = res.data.prefix || 'GoPay_';
+    state.apiKeyCreatedAt = res.data.created_at;
+    state.apiKeyStorage = 'redis';
+    state.apiKeyRevealed = false;
+    setApiKeyStorageBadge();
+    renderApiKeyFilled();
+    return;
+  }
+
+  try {
+    const local = localStorage.getItem(apiKeyStorageKey());
+    if (local) {
+      const d = JSON.parse(local);
+      state.apiKey = d.key;
+      state.apiKeyPrefix = d.prefix || 'GoPay_';
+      state.apiKeyCreatedAt = d.created_at;
+      state.apiKeyStorage = 'local';
+      state.apiKeyRevealed = false;
+      setApiKeyStorageBadge();
+      renderApiKeyFilled();
+      return;
+    }
+  } catch (_) {}
+
+  state.apiKey = null;
+  state.apiKeyStorage = 'none';
+  setApiKeyStorageBadge();
+  renderApiKeyEmpty();
+}
+
+function renderApiKeyEmpty() {
+  const content = document.getElementById('apikeyContent');
+  content.innerHTML = `
+    <div class="qris-empty" style="padding:10px 0 14px">
+      API key memberi akses ke REST API tanpa perlu login ulang.
+    </div>
+    <div class="field-label">Prefix API Key</div>
+    <div class="apikey-input-row">
+      <input type="text" id="apikeyPrefix" value="${escapeHtml(state.apiKeyPrefix || 'GoPay_')}" placeholder="GoPay_" maxlength="20">
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px">2-20 char, alfanumerik + <code>_</code> <code>.</code> <code>-</code></div>
+    <button class="btn btn-primary" id="btnGenApiKey" style="margin-top:14px" onclick="generateApiKey()">
+      GENERATE API KEY
+    </button>
+  `;
+}
+
+function renderApiKeyFilled() {
+  const content = document.getElementById('apikeyContent');
+  const masked = maskApiKey(state.apiKey);
+  const shown = state.apiKeyRevealed ? state.apiKey : masked;
+  const eyeIcon = state.apiKeyRevealed
+    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+
+  content.innerHTML = `
+    <div class="apikey-box">
+      <div class="apikey-value" id="apikeyValue">${escapeHtml(shown)}</div>
+      <div class="apikey-actions">
+        <button class="apikey-icon-btn" id="btnRevealKey" title="${state.apiKeyRevealed ? 'Sembunyikan' : 'Lihat'}">${eyeIcon}</button>
+        <button class="apikey-icon-btn" id="btnCopyKey" title="Copy">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="apikey-meta">
+      <span>Dibuat: ${state.apiKeyCreatedAt ? escapeHtml(formatTime(state.apiKeyCreatedAt)) : '—'}</span>
+      <span>•</span>
+      <span>Prefix: ${escapeHtml(state.apiKeyPrefix)}</span>
+    </div>
+    <div class="apikey-actions" style="margin-top:12px">
+      <button class="btn btn-sm btn-purple-soft" id="btnRegenKey">REGENERATE</button>
+      <button class="btn btn-sm btn-danger-soft" id="btnDelKey">HAPUS</button>
+    </div>
+    ${state.apiKeyStorage === 'local' ? `
+      <div class="apikey-warn">
+        ⚠️ API key lokal tidak aktif untuk akses eksternal. Setup Upstash Redis untuk mengaktifkan.
+      </div>` : ''}
+    <div class="apikey-help">
+      <strong>Cara pakai:</strong><br>
+      • <code>?apikey=${escapeHtml(masked)}</code><br>
+      • Header <code>X-API-Key: ${escapeHtml(masked)}</code><br>
+      • Header <code>Authorization: Bearer ${escapeHtml(masked)}</code>
+    </div>
+  `;
+  document.getElementById('btnRevealKey').addEventListener('click', () => {
+    state.apiKeyRevealed = !state.apiKeyRevealed;
+    renderApiKeyFilled();
+  });
+  document.getElementById('btnCopyKey').addEventListener('click', () => copyText(state.apiKey));
+  document.getElementById('btnRegenKey').addEventListener('click', regenerateApiKey);
+  document.getElementById('btnDelKey').addEventListener('click', deleteApiKey);
+}
+
+async function generateApiKey() {
+  const prefixInput = document.getElementById('apikeyPrefix');
+  const prefix = (prefixInput?.value || 'GoPay_').trim();
+  if (prefix.length < 2 || prefix.length > 20 || !/^[A-Za-z0-9_.-]+$/.test(prefix)) {
+    toast('Prefix tidak valid (2-20 char alfanumerik + _ . -)');
+    return;
+  }
+
+  const btn = document.getElementById('btnGenApiKey');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Generating…'; }
+
+  const res = await apiJson('POST', '/gopay/apikey', {
+    phone: state.phone,
+    access_token: state.accessToken,
+    refresh_token: state.refreshToken,
+    prefix
+  });
+
+  if (res.ok && res.data.success) {
+    state.apiKey = res.data.apikey;
+    state.apiKeyPrefix = res.data.prefix;
+    state.apiKeyCreatedAt = res.data.created_at;
+    state.apiKeyStorage = 'redis';
+    state.apiKeyRevealed = false;
+    setApiKeyStorageBadge();
+    toast('API key dibuat ☁️');
+    renderApiKeyFilled();
+    return;
+  }
+
+  try {
+    const bytes = crypto.getRandomValues(new Uint8Array(24));
+    const rand = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    const key = prefix + rand;
+    const data = {
+      key, prefix,
+      created_at: new Date().toISOString(),
+      access_token: state.accessToken,
+      refresh_token: state.refreshToken
+    };
+    localStorage.setItem(apiKeyStorageKey(), JSON.stringify(data));
+    state.apiKey = key;
+    state.apiKeyPrefix = prefix;
+    state.apiKeyCreatedAt = data.created_at;
+    state.apiKeyStorage = 'local';
+    state.apiKeyRevealed = false;
+    setApiKeyStorageBadge();
+    toast('API key dibuat (lokal) 💾');
+    renderApiKeyFilled();
+  } catch (e) {
+    toast('Gagal generate: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; }
+  }
+}
+
+async function regenerateApiKey() {
+  if (!confirm('Regenerate API key? Key lama akan langsung tidak valid.')) return;
+  await apiJson('DELETE', '/gopay/apikey', { phone: state.phone });
+  try { localStorage.removeItem(apiKeyStorageKey()); } catch (_) {}
+  state.apiKey = null;
+  renderApiKeyEmpty();
+  await generateApiKey();
+}
+
+async function deleteApiKey() {
+  if (!confirm('Hapus API key?')) return;
+  await apiJson('DELETE', '/gopay/apikey', { phone: state.phone });
+  try { localStorage.removeItem(apiKeyStorageKey()); } catch (_) {}
+  state.apiKey = null;
+  state.apiKeyCreatedAt = null;
+  state.apiKeyRevealed = false;
+  state.apiKeyStorage = 'none';
+  setApiKeyStorageBadge();
+  toast('API key dihapus');
+  renderApiKeyEmpty();
+}
+
+(function initOtpBoxes() {
+  const boxes = document.querySelectorAll('#otpBoxes input');
+  boxes.forEach((box, i) => {
+    box.addEventListener('input', e => {
+      const v = e.target.value.replace(/\D/g, '');
+      e.target.value = v.slice(-1);
+      if (v && i < boxes.length - 1) boxes[i + 1].focus();
+    });
+    box.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus();
+    });
+    box.addEventListener('paste', e => {
+      e.preventDefault();
+      const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 4);
+      paste.split('').forEach((ch, j) => { if (boxes[j]) boxes[j].value = ch; });
+      if (paste.length) boxes[Math.min(paste.length, boxes.length) - 1].focus();
+    });
+  });
+})();
+
+(function initDrop() {
+  const zone = document.getElementById('dropZone');
+  if (!zone) return;
+  ['dragenter', 'dragover'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add('dragover'); }));
+  ['dragleave', 'drop'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove('dragover'); }));
+  zone.addEventListener('drop', e => {
+    const file = e.dataTransfer?.files?.[0];
+    if (file) processQrFile(file);
+  });
+})();
+
+function docsToggle(el) { el.parentElement.classList.toggle('open'); }
+function docsCopy(e) {
+  e.stopPropagation();
+  const code = e.target.closest('.docs-code');
+  const pre = code?.querySelector('pre');
+  if (!pre) return;
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    const old = e.target.textContent;
+    e.target.textContent = 'COPIED ✓';
+    e.target.style.color = 'var(--green)';
+    setTimeout(() => {
+      e.target.textContent = old;
+      e.target.style.color = '';
+    }, 1400);
+  }).catch(() => {});
+}
+
+(function initDocs() {
+  const el = document.getElementById('docsBaseUrl');
+  if (el) el.textContent = location.origin;
+  const copyBtn = document.getElementById('btnCopyBaseUrl');
+  if (copyBtn) copyBtn.addEventListener('click', () => copyText(location.origin));
+  // Buka endpoint pertama di tiap section untuk first impression
+  if (window.innerWidth >= 768) {
+    document.querySelectorAll('.docs-section .docs-endpoint').forEach((ep, i) => {
+      if (i === 0) ep.classList.add('open');
+    });
+  }
+})();
+
+(function restore() {
+  try {
+    const at = localStorage.getItem('gm_access');
+    const rt = localStorage.getItem('gm_refresh');
+    const ph = localStorage.getItem('gm_phone');
+    if (at) {
+      state.accessToken = at;
+      state.refreshToken = rt || '';
+      state.phone = ph || '';
+      renderTokens();
+      showScreen('dashboard');
+      if (navigator.onLine) {
+        api('/gopay/validate', { token: at }).then(res => {
+          if (res.status === 401) {
+            toast('Session kedaluwarsa, login ulang');
+            logout();
+          }
+        });
+      }
+    }
+  } catch (_) {}
+})();
+
+document.getElementById('phoneInput')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') requestOtp();
+});
+</script>
+</body>
+</html>
